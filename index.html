@@ -135,7 +135,6 @@
             margin-bottom: 12px;
         }
 
-        /* 이미지와 텍스트를 겹쳐서 보여주는 컨테이너 */
         .preview-container {
             position: relative;
             width: 220px;
@@ -156,7 +155,7 @@
             object-fit: contain;
         }
 
-        /* 오버레이 텍스트 스타일 */
+        /* 상단 숫자 오버레이 */
         .overlay-top {
             position: absolute;
             top: 15px;
@@ -229,7 +228,10 @@
             <div class="preview-container" id="previewContainer">
                 <span class="placeholder-text" id="placeholderText">정보를 입력해주세요</span>
                 <img id="resultImage" src="" alt="" style="display:none;">
+                
+                <!-- 상단 숫자 오버레이 영역 -->
                 <div class="overlay-top" id="overlayTop"></div>
+
                 <div class="overlay-bottom" id="overlayBottom">
                     <div class="overlay-nickname" id="overlayNick"></div>
                     <div class="overlay-donation" id="overlayDonationText"></div>
@@ -239,21 +241,22 @@
     </div>
 
     <script>
+        // 각 이미지별로 상단 숫자를 띄울지 여부 설정 (showTop: true = 상단 숫자 표시, false = 상단 숫자 숨김)
         const sigImages = {
-            "508": "https://sig.cnine.kr/signature/20260328/c4825df37c964a549914c62a06c71791.gif",
-            "606": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/6062.gif",
-            "1010": "https://sig.cnine.kr/signature/20260412/668dbcd4446d49448776eea866dd25a1.gif",
-            "1070": "https://sig.cnine.kr/signature/20260328/c5e61476097d4af79086a072cf277059.png",
-            "1470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1470_jh.png",
-            "1916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1916_jh.png",
-            "2870": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/2870_jh.png",
-            "3916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/3916_jh.png",
-            "5770": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/5770_jh.png",
-            "9916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/9916_jh.png",
-            "12470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/12470_jh.png",
-            "28270": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/28270_jh.png",
-            "30916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/30916_jh.png",
-            "99916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/99916_jh.png"
+            "508": { url: "https://sig.cnine.kr/signature/20260328/c4825df37c964a549914c62a06c71791.gif", showTop: false },
+            "606": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/6062.gif", showTop: false },
+            "1010": { url: "https://sig.cnine.kr/signature/20260412/668dbcd4446d49448776eea866dd25a1.gif", showTop: false },
+            "1070": { url: "https://sig.cnine.kr/signature/20260328/c5e61476097d4af79086a072cf277059.png", showTop: false },
+            "1470": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1470_jh.png", showTop: false },
+            "1916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1916_jh.png", showTop: false },
+            "2870": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/2870_jh.png", showTop: false },
+            "3916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/3916_jh.png", showTop: false },
+            "5770": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/5770_jh.png", showTop: false },
+            "9916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/9916_jh.png", showTop: false },
+            "12470": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/12470_jh.png", showTop: false },
+            "28270": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/28270_jh.png", showTop: false },
+            "30916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/30916_jh.png", showTop: false },
+            "99916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/99916_jh.png", showTop: false }
         };
 
         const form = document.getElementById('imageForm');
@@ -270,21 +273,24 @@
             const nickname = document.getElementById('nickname').value.trim();
             const donation = document.getElementById('donation').value.trim();
 
-            const targetImageUrl = sigImages[donation];
+            const targetData = sigImages[donation];
 
-            if (!targetImageUrl) {
+            if (!targetData) {
                 alert(`입력하신 [${donation}개]에 해당하는 등록된 시그 이미지가 없습니다!`);
                 return;
             }
 
-            // 이미지 로드 및 화면 출력
             placeholderText.style.display = 'none';
             resultImage.style.display = 'block';
-            resultImage.src = targetImageUrl;
+            resultImage.src = targetData.url;
 
-            // 오버레이 텍스트 설정
-            overlayTop.textContent = donation;
-            overlayTop.style.display = 'block';
+            // showTop이 true인 경우에만 상단 숫자를 띄우고, 아니면 숨김
+            if (targetData.showTop) {
+                overlayTop.textContent = donation;
+                overlayTop.style.display = 'block';
+            } else {
+                overlayTop.style.display = 'none';
+            }
 
             overlayNick.textContent = nickname;
             overlayDonationText.textContent = `별풍선 ${donation}개`;
