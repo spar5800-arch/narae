@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>유주현♡ 시그 벽지 생성기</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTML을 이미지로 캡처하기 위한 html2canvas 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --bg1: #faf8fc;
@@ -135,6 +137,7 @@
             margin-bottom: 12px;
         }
 
+        /* 미리보기 박스 배경 흰색, 이미지가 가득 차도록 설정 */
         .preview-container {
             position: relative;
             width: 220px;
@@ -144,14 +147,49 @@
             background-color: #ffffff;
             overflow: hidden;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .preview-container img {
+            width: 100%;
+            height: 175px;
+            object-fit: contain;
+            background-color: #fff;
+        }
+
+        /* 하단 닉네임 및 별풍선 영역 (검은 배경 박스 스타일) */
+        .overlay-bottom {
+            width: 100%;
+            height: 45px;
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .overlay-nickname {
+            font-size: 12px;
+            font-weight: 700;
+            color: #ff6b6b;
+            line-height: 1.2;
+        }
+
+        .overlay-donation {
+            font-size: 12px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1.2;
         }
 
         .placeholder-text {
             color: var(--muted);
             font-size: 13px;
+            margin: auto;
         }
     </style>
 </head>
@@ -181,13 +219,20 @@
 
         <div class="result-section">
             <h2 class="result-title">생성된 미리보기</h2>
+            
             <div class="preview-container" id="previewContainer">
                 <span class="placeholder-text" id="placeholderText">정보를 입력해주세요</span>
-                <canvas id="resultCanvas" width="187" height="155" style="display:none; width: 100%; height: 100%; object-fit: contain;"></canvas>
+                
+                <img id="resultImage" src="" alt="" style="display:none;">
+
+                <div class="overlay-bottom" id="overlayBottom">
+                    <div class="overlay-nickname" id="overlayNick"></div>
+                    <div class="overlay-donation" id="overlayDonationText"></div>
+                </div>
             </div>
 
             <br>
-            <a id="downloadLink" href="#" download="generated_image.png" class="mt-4 text-purple-600 font-semibold hover:underline" style="display:none;">이미지 다운로드</a>
+            <button id="downloadBtn" class="mt-4 text-purple-600 font-semibold hover:underline bg-transparent border-none cursor-pointer" style="display:none;">이미지 다운로드</button>
         </div>
     </div>
 
@@ -210,10 +255,13 @@
         };
 
         const form = document.getElementById('imageForm');
-        const resultCanvas = document.getElementById('resultCanvas');
-        const ctx = resultCanvas.getContext('2d');
+        const previewContainer = document.getElementById('previewContainer');
+        const resultImage = document.getElementById('resultImage');
         const placeholderText = document.getElementById('placeholderText');
-        const downloadLink = document.getElementById('downloadLink');
+        const overlayBottom = document.getElementById('overlayBottom');
+        const overlayNick = document.getElementById('overlayNick');
+        const overlayDonationText = document.getElementById('overlayDonationText');
+        const downloadBtn = document.getElementById('downloadBtn');
 
         form.addEventListener('submit', (event) => {
             event.preventDefault();
@@ -221,52 +269,32 @@
             const nickname = document.getElementById('nickname').value.trim();
             const donation = document.getElementById('donation').value.trim();
 
+            // 입력한 별풍선 개수에 해당하는 이미지가 있는지 확인 (없으면 기본 이미지 사용)
+            const targetImageUrl = sigImages[donation] || 'https://stimg.sooplive.co.kr/NORMAL_BBS/8/25442978/4573678213100d8bf.png';
+
             placeholderText.style.display = 'none';
-            downloadLink.style.display = 'none';
-            resultCanvas.style.display = 'block';
+            
+            // 이미지 출력
+            resultImage.style.display = 'block';
+            resultImage.src = targetImageUrl;
 
-            // 1. 등록된 시그 이미지가 있으면 그 이미지를, 없으면 기본 이미지를 사용
-            const imageUrl = sigImages[donation] || 'https://stimg.sooplive.co.kr/NORMAL_BBS/8/25442978/4573678213100d8bf.png';
+            // 하단 닉네임 및 별풍선 텍스트 설정
+            overlayNick.textContent = nickname;
+            overlayDonationText.textContent = `별풍선 ${donation}개`;
+            overlayBottom.style.display = 'flex';
 
-            ctx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
-
-            const bgImage = new Image();
-            bgImage.crossOrigin = 'anonymous'; // CORS 우회 설정
-            bgImage.src = imageUrl;
-
-            bgImage.onload = () => {
-                ctx.drawImage(bgImage, 0, 0, resultCanvas.width, resultCanvas.height);
-                drawText(nickname, donation);
-                activateDownload();
-            };
-
-            bgImage.onerror = () => {
-                drawText(nickname, donation);
-                activateDownload();
-            };
+            downloadBtn.style.display = 'inline-block';
         });
 
-        function drawText(nickname, donation) {
-            // 하단 닉네임 (기존 방식과 동일한 위치/스타일)
-            ctx.font = '13px Arial';
-            ctx.fillStyle = '#d65648';
-            ctx.textAlign = 'center';
-            ctx.fillText(nickname, resultCanvas.width / 2, resultCanvas.height - 22);
-
-            // 하단 별풍선 개수 텍스트 (기존 방식과 동일한 위치/스타일)
-            ctx.font = 'bold 13px Arial';
-            ctx.fillStyle = 'black';
-            ctx.fillText(`별풍선 ${donation}개`, resultCanvas.width / 2, resultCanvas.height - 7);
-        }
-
-        function activateDownload() {
-            downloadLink.style.display = 'inline-block';
-            try {
-                downloadLink.href = resultCanvas.toDataURL('image/png');
-            } catch (e) {
-                console.error('CORS 이슈로 다운로드가 제한될 수 있습니다.', e);
-            }
-        }
+        // 하단 다운로드 버튼 클릭 시 전체 미리보기 영역을 이미지로 캡처해서 저장
+        downloadBtn.addEventListener('click', () => {
+            html2canvas(previewContainer, { useCORS: true, scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'sig_wallpaper.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
     </script>
 </body>
 </html>
