@@ -155,20 +155,7 @@
             object-fit: contain;
         }
 
-        /* 상단 숫자 오버레이 */
-        .overlay-top {
-            position: absolute;
-            top: 15px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 32px;
-            font-weight: 900;
-            color: #ef4444;
-            text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 3px 6px rgba(0,0,0,0.8);
-            display: none;
-        }
-
+        /* 등록된 시그 이미지 위에 띄울 텍스트 오버레이 영역 */
         .overlay-bottom {
             position: absolute;
             bottom: 12px;
@@ -227,45 +214,49 @@
             <h2 class="result-title">생성된 미리보기</h2>
             <div class="preview-container" id="previewContainer">
                 <span class="placeholder-text" id="placeholderText">정보를 입력해주세요</span>
-                <img id="resultImage" src="" alt="" style="display:none;">
                 
-                <!-- 상단 숫자 오버레이 영역 -->
-                <div class="overlay-top" id="overlayTop"></div>
+                <img id="resultImage" src="" alt="" style="display:none;">
+
+                <canvas id="resultCanvas" width="187" height="155" style="display:none; width: 100%; height: 100%; object-fit: contain;"></canvas>
 
                 <div class="overlay-bottom" id="overlayBottom">
                     <div class="overlay-nickname" id="overlayNick"></div>
                     <div class="overlay-donation" id="overlayDonationText"></div>
                 </div>
             </div>
+            <br>
+            <a id="downloadLink" href="#" download="generated_image.png" class="mt-4 text-purple-600 font-semibold hover:underline" style="display:none;">이미지 다운로드</a>
         </div>
     </div>
 
     <script>
-        // 각 이미지별로 상단 숫자를 띄울지 여부 설정 (showTop: true = 상단 숫자 표시, false = 상단 숫자 숨김)
+        // 1. 이미지가 있는 별풍선 개수 목록
         const sigImages = {
-            "508": { url: "https://sig.cnine.kr/signature/20260328/c4825df37c964a549914c62a06c71791.gif", showTop: false },
-            "606": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/6062.gif", showTop: false },
-            "1010": { url: "https://sig.cnine.kr/signature/20260412/668dbcd4446d49448776eea866dd25a1.gif", showTop: false },
-            "1070": { url: "https://sig.cnine.kr/signature/20260328/c5e61476097d4af79086a072cf277059.png", showTop: false },
-            "1470": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1470_jh.png", showTop: false },
-            "1916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1916_jh.png", showTop: false },
-            "2870": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/2870_jh.png", showTop: false },
-            "3916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/3916_jh.png", showTop: false },
-            "5770": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/5770_jh.png", showTop: false },
-            "9916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/9916_jh.png", showTop: false },
-            "12470": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/12470_jh.png", showTop: false },
-            "28270": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/28270_jh.png", showTop: false },
-            "30916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/30916_jh.png", showTop: false },
-            "99916": { url: "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/99916_jh.png", showTop: false }
+            "508": "https://sig.cnine.kr/signature/20260328/c4825df37c964a549914c62a06c71791.gif",
+            "606": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/6062.gif",
+            "1010": "https://sig.cnine.kr/signature/20260412/668dbcd4446d49448776eea866dd25a1.gif",
+            "1070": "https://sig.cnine.kr/signature/20260328/c5e61476097d4af79086a072cf277059.png",
+            "1470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1470_jh.png",
+            "1916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1916_jh.png",
+            "2870": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/2870_jh.png",
+            "3916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/3916_jh.png",
+            "5770": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/5770_jh.png",
+            "9916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/9916_jh.png",
+            "12470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/12470_jh.png",
+            "28270": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/28270_jh.png",
+            "30916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/30916_jh.png",
+            "99916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/99916_jh.png"
         };
 
         const form = document.getElementById('imageForm');
         const resultImage = document.getElementById('resultImage');
+        const resultCanvas = document.getElementById('resultCanvas');
+        const ctx = resultCanvas.getContext('2d');
         const placeholderText = document.getElementById('placeholderText');
-        const overlayTop = document.getElementById('overlayTop');
         const overlayBottom = document.getElementById('overlayBottom');
         const overlayNick = document.getElementById('overlayNick');
         const overlayDonationText = document.getElementById('overlayDonationText');
+        const downloadLink = document.getElementById('downloadLink');
 
         form.addEventListener('submit', (event) => {
             event.preventDefault();
@@ -273,29 +264,89 @@
             const nickname = document.getElementById('nickname').value.trim();
             const donation = document.getElementById('donation').value.trim();
 
-            const targetData = sigImages[donation];
-
-            if (!targetData) {
-                alert(`입력하신 [${donation}개]에 해당하는 등록된 시그 이미지가 없습니다!`);
-                return;
-            }
-
             placeholderText.style.display = 'none';
-            resultImage.style.display = 'block';
-            resultImage.src = targetData.url;
+            downloadLink.style.display = 'none';
 
-            // showTop이 true인 경우에만 상단 숫자를 띄우고, 아니면 숨김
-            if (targetData.showTop) {
-                overlayTop.textContent = donation;
-                overlayTop.style.display = 'block';
+            const targetImageUrl = sigImages[donation];
+
+            if (targetImageUrl) {
+                // [케이스 A] 목록에 이미지가 있는 경우 (시그 이미지 표시 + 하단 텍스트 오버레이)
+                resultCanvas.style.display = 'none';
+                resultImage.style.display = 'block';
+                resultImage.src = targetImageUrl;
+
+                overlayNick.textContent = nickname;
+                overlayDonationText.textContent = `별풍선 ${donation}개`;
+                overlayBottom.style.display = 'block';
+
+                // 이미지 로드 완료 시 다운로드 링크 활성화 (단, 외부 이미지 CORS 문제로 toDataURL이 제한될 수 있어 일반 링크로 연결)
+                downloadLink.style.display = 'inline-block';
+                downloadLink.href = targetImageUrl;
+                downloadLink.setAttribute('download', `sig_${donation}.png`);
+
             } else {
-                overlayTop.style.display = 'none';
-            }
+                // [케이스 B] 목록에 이미지가 없는 경우 (기존 Canvas 방식 활용)
+                resultImage.style.display = 'none';
+                overlayBottom.style.display = 'none';
+                resultCanvas.style.display = 'block';
 
-            overlayNick.textContent = nickname;
-            overlayDonationText.textContent = `별풍선 ${donation}개`;
-            overlayBottom.style.display = 'block';
+                ctx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
+
+                const backgroundImage = new Image();
+                backgroundImage.crossOrigin = 'anonymous';
+                backgroundImage.src = 'https://stimg.sooplive.co.kr/NORMAL_BBS/8/25442978/4573678213100d8bf.png';
+                
+                backgroundImage.onload = () => {
+                    ctx.drawImage(backgroundImage, 0, 0, resultCanvas.width, resultCanvas.height);
+                    drawText(nickname, donation);
+                    activateDownload();
+                };
+
+                backgroundImage.onerror = () => {
+                    drawText(nickname, donation);
+                    activateDownload();
+                };
+            }
         });
+
+        function drawText(nickname, donation) {
+            // 닉네임 텍스트
+            ctx.font = '13px Arial';
+            ctx.fillStyle = '#d65648';
+            ctx.textAlign = 'center';
+            ctx.fillText(nickname, resultCanvas.width / 2, resultCanvas.height - 22);
+
+            // 별풍선 개수 텍스트 (하단 검정색)
+            ctx.font = 'bold 13px Arial';
+            ctx.fillStyle = 'black';
+            ctx.fillText(`별풍선 ${donation}개`, resultCanvas.width / 2, resultCanvas.height - 7);
+
+            // 별풍선 개수 텍스트 (상단 굵은 테두리 + 빨간색)
+            ctx.font = 'bold 40px Arial';
+
+            // 바깥쪽 검정 테두리
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 8;
+            ctx.strokeText(donation, resultCanvas.width / 2, 40);
+
+            // 안쪽 흰색 테두리
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 6;
+            ctx.strokeText(donation, resultCanvas.width / 2, 40);
+
+            // 빨간색 텍스트
+            ctx.fillStyle = 'red';
+            ctx.fillText(donation, resultCanvas.width / 2, 40);
+        }
+
+        function activateDownload() {
+            downloadLink.style.display = 'inline-block';
+            try {
+                downloadLink.href = resultCanvas.toDataURL('image/png');
+            } catch (e) {
+                console.error(e);
+            }
+        }
     </script>
 </body>
 </html>
