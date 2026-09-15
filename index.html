@@ -195,99 +195,93 @@
     </div>
 
     <script>
-        // 별풍선 개수별 시그니처 이미지 매핑 데이터베이스
-        const sigImages = {
-            "508": "https://sig.cnine.kr/signature/20260328/c4825df37c964a549914c62a06c71791.gif",
-            "606": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/6062.gif",
-            "1010": "https://sig.cnine.kr/signature/20260412/668dbcd4446d49448776eea866dd25a1.gif",
-            "1070": "https://sig.cnine.kr/signature/20260328/c5e61476097d4af79086a072cf277059.png",
-            "1470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1470_jh.png",
-            "1916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1916_jh.png",
-            "2870": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/2870_jh.png",
-            "3916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/3916_jh.png",
-            "5770": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/5770_jh.png",
-            "9916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/9916_jh.png",
-            "12470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/12470_jh.png",
-            "28270": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/28270_jh.png",
-            "30916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/30916_jh.png",
-            "99916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/99916_jh.png"
+    // 별풍선 개수별 시그니처 이미지 매핑 데이터베이스
+    const sigImages = {
+        "508": "https://sig.cnine.kr/signature/20260328/c4825df37c964a549914c62a06c71791.gif",
+        "606": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/6062.gif",
+        "1010": "https://sig.cnine.kr/signature/20260412/668dbcd4446d49448776eea866dd25a1.gif",
+        "1070": "https://sig.cnine.kr/signature/20260328/c5e61476097d4af79086a072cf277059.png",
+        "1470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1470_jh.png",
+        "1916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1916_jh.png",
+        "2870": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/2870_jh.png",
+        "3916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/3916_jh.png",
+        "5770": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/5770_jh.png",
+        "9916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/9916_jh.png",
+        "12470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/12470_jh.png",
+        "28270": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/28270_jh.png",
+        "30916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/30916_jh.png",
+        "99916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/99916_jh.png"
+    };
+
+    const form = document.getElementById('imageForm');
+    const canvas = document.getElementById('resultCanvas');
+    const ctx = canvas.getContext('2d');
+    const downloadLink = document.getElementById('downloadLink');
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const nickname = document.getElementById('nickname').value.trim();
+        const donation = document.getElementById('donation').value.trim();
+
+        const targetImageUrl = sigImages[donation];
+
+        if (!targetImageUrl) {
+            alert(`입력하신 [${donation}개]에 해당하는 등록된 시그 이미지가 없습니다!`);
+            return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const backgroundImage = new Image();
+        backgroundImage.crossOrigin = 'anonymous';
+        
+        // CORS 우회를 위해 무료 프록시 서버 주소를 앞에 붙입니다.
+        backgroundImage.src = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetImageUrl);
+
+        backgroundImage.onload = () => {
+            ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+            drawText(nickname, donation);
+            activateDownload();
         };
 
-        const form = document.getElementById('imageForm');
-        const canvas = document.getElementById('resultCanvas');
-        const ctx = canvas.getContext('2d');
-        const downloadLink = document.getElementById('downloadLink');
+        backgroundImage.onerror = () => {
+            alert('이미지를 불러오는 중 문제가 발생했습니다. 프록시 서버 연결을 확인해주세요.');
+        };
+    });
 
-        form.addEventListener('submit', (event) => {
-            event.preventDefault();
+    function drawText(nickname, donation) {
+        ctx.font = 'bold 13px -apple-system, sans-serif';
+        ctx.fillStyle = '#ff6b6b';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(nickname, canvas.width / 2, canvas.height - 25);
 
-            const nickname = document.getElementById('nickname').value.trim();
-            const donation = document.getElementById('donation').value.trim();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`별풍선 ${donation}개`, canvas.width / 2, canvas.height - 8);
 
-            const targetImageUrl = sigImages[donation];
+        ctx.font = 'bold 36px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 6;
+        ctx.strokeText(donation, canvas.width / 2, 45);
 
-            if (!targetImageUrl) {
-                alert(`입력하신 [${donation}개]에 해당하는 등록된 시그 이미지가 없습니다!`);
-                return;
-            }
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 3;
+        ctx.strokeText(donation, canvas.width / 2, 45);
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText(donation, canvas.width / 2, 45);
+        
+        ctx.shadowBlur = 0;
+    }
 
-            const backgroundImage = new Image();
-            backgroundImage.crossOrigin = 'anonymous'; // 외부 이미지 CORS 우회 시도
-            backgroundImage.src = targetImageUrl;
-
-            backgroundImage.onload = () => {
-                // 캔버스 크기를 이미지 비율에 맞게 조절할 수도 있습니다 (기본 200x200 고정 예시)
-                ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-                drawText(nickname, donation);
-                activateDownload();
-            };
-
-            backgroundImage.onerror = () => {
-                alert('이미지를 불러오는 중 문제가 발생했습니다. (CORS 또는 네트워크 오류)');
-            };
-        });
-
-        function drawText(nickname, donation) {
-            // 닉네임 텍스트 (하단 배치)
-            ctx.font = 'bold 13px -apple-system, sans-serif';
-            ctx.fillStyle = '#ff6b6b';
-            ctx.textAlign = 'center';
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-            ctx.shadowBlur = 4;
-            ctx.fillText(nickname, canvas.width / 2, canvas.height - 25);
-
-            // 별풍선 개수 텍스트 (하단 배치)
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText(`별풍선 ${donation}개`, canvas.width / 2, canvas.height - 8);
-
-            // 캔버스 상단 강조 텍스트 (두께감 있는 이중 테두리 효과)
-            ctx.font = 'bold 36px -apple-system, sans-serif';
-            ctx.textAlign = 'center';
-            
-            // 바깥 테두리 (검정)
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 6;
-            ctx.strokeText(donation, canvas.width / 2, 45);
-
-            // 안쪽 테두리 (흰색)
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 3;
-            ctx.strokeText(donation, canvas.width / 2, 45);
-
-            // 메인 글자 채우기 (빨강)
-            ctx.fillStyle = '#ef4444';
-            ctx.fillText(donation, canvas.width / 2, 45);
-            
-            // 그림자 초기화
-            ctx.shadowBlur = 0;
-        }
-
-        function activateDownload() {
-            downloadLink.style.display = 'inline-block';
-            downloadLink.href = canvas.toDataURL('image/png');
-        }
-    </script>
+    function activateDownload() {
+        downloadLink.style.display = 'inline-block';
+        downloadLink.href = canvas.toDataURL('image/png');
+    }
+</script>
 </body>
 </html>
