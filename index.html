@@ -7,15 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
-            --bg1: #faf8fc; /* 전체 배경 (아주 연한 보라빛이 감도는 화이트 그레이) */
-            --bg2: #f3eef8; /* 헤더/푸터 배경 (부드러운 연보라 톤) */
-            --card: #ffffff; /* 카드 배경 (순백색) */
-            --line: #e6daf0; /* 은은하고 부드러운 라벤더빛 테두리 및 구분선 */
-            --text: #2d2638; /* 기본 글자색 (짙은 플럼/차콜 톤) */
-            --muted: #8c7b9e; /* 보조 글자색 (차분한 보라빛 그레이) */
-            --accent: #9333ea; /* 메인 포인트 (예쁘고 선명한 연보라/퍼플) */
-            --accent2: #c084fc; /* 서브 연보라 포인트 */
-            --shadow: 0 14px 40px rgba(147, 51, 234, 0.08); /* 부드러운 보라빛 그림자 */
+            --bg1: #faf8fc;
+            --bg2: #f3eef8;
+            --card: #ffffff;
+            --line: #e6daf0;
+            --text: #2d2638;
+            --muted: #8c7b9e;
+            --accent: #9333ea;
+            --accent2: #c084fc;
+            --shadow: 0 14px 40px rgba(147, 51, 234, 0.08);
             --radius: 18px;
         }
 
@@ -135,30 +135,68 @@
             margin-bottom: 12px;
         }
 
-        canvas {
+        /* 이미지와 텍스트를 겹쳐서 보여주는 컨테이너 */
+        .preview-container {
+            position: relative;
+            width: 220px;
+            height: 220px;
             border: 1px solid var(--line);
             border-radius: 12px;
-            background-color: #000;
+            background-color: #111;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        .download-btn {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background-color: var(--bg2);
-            color: var(--accent);
-            font-weight: 700;
-            font-size: 14px;
-            border-radius: 10px;
-            text-decoration: none;
-            border: 1px solid var(--line);
-            transition: all 0.2s;
+        .preview-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
-        .download-btn:hover {
-            background-color: var(--accent);
-            color: white;
+        /* 오버레이 텍스트 스타일 */
+        .overlay-top {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 900;
+            color: #ef4444;
+            text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 3px 6px rgba(0,0,0,0.8);
+            display: none;
+        }
+
+        .overlay-bottom {
+            position: absolute;
+            bottom: 12px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            display: none;
+            line-height: 1.3;
+        }
+
+        .overlay-nickname {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ff6b6b;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+        }
+
+        .overlay-donation {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+        }
+
+        .placeholder-text {
+            color: var(--muted);
+            font-size: 13px;
         }
     </style>
 </head>
@@ -167,7 +205,7 @@
     <div class="card">
         <div class="header">
             <div class="brand">
-                <img src="https://stimg.sooplive.com/LOGO/wn/wnsdus5900/wnsdus5900.jpg" alt="유주현♡">
+                <img src="https://stimg.sooplive.co.kr/LOGO/wn/wnsdus5900/wnsdus5900.jpg" alt="유주현♡">
             </div>
             <div class="header-text">
                 <h1>유주현<span>♡</span> 시그 벽지 생성기</h1>
@@ -181,107 +219,77 @@
             </div>
             <div class="input-group">
                 <label for="donation">별풍선 개수</label>
-                <input type="number" id="donation" name="donation" placeholder="예: 1070, 1470" required autocomplete="off">
+                <input type="number" id="donation" name="donation" placeholder="예: 508, 1070, 1470" required autocomplete="off">
             </div>
             <button type="submit" class="btn-submit">이미지 생성하기</button>
         </form>
 
         <div class="result-section">
             <h2 class="result-title">생성된 미리보기</h2>
-            <canvas id="resultCanvas" width="200" height="200"></canvas>
-            <br>
-            <a id="downloadLink" href="#" download="sig_wallpaper.png" class="download-btn" style="display:none;">이미지 다운로드</a>
+            <div class="preview-container" id="previewContainer">
+                <span class="placeholder-text" id="placeholderText">정보를 입력해주세요</span>
+                <img id="resultImage" src="" alt="" style="display:none;">
+                <div class="overlay-top" id="overlayTop"></div>
+                <div class="overlay-bottom" id="overlayBottom">
+                    <div class="overlay-nickname" id="overlayNick"></div>
+                    <div class="overlay-donation" id="overlayDonationText"></div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-    // 별풍선 개수별 시그니처 이미지 매핑 데이터베이스
-    const sigImages = {
-        "508": "https://sig.cnine.kr/signature/20260328/c4825df37c964a549914c62a06c71791.gif",
-        "606": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/6062.gif",
-        "1010": "https://sig.cnine.kr/signature/20260412/668dbcd4446d49448776eea866dd25a1.gif",
-        "1070": "https://sig.cnine.kr/signature/20260328/c5e61476097d4af79086a072cf277059.png",
-        "1470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1470_jh.png",
-        "1916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1916_jh.png",
-        "2870": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/2870_jh.png",
-        "3916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/3916_jh.png",
-        "5770": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/5770_jh.png",
-        "9916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/9916_jh.png",
-        "12470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/12470_jh.png",
-        "28270": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/28270_jh.png",
-        "30916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/30916_jh.png",
-        "99916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/99916_jh.png"
-    };
-
-    const form = document.getElementById('imageForm');
-    const canvas = document.getElementById('resultCanvas');
-    const ctx = canvas.getContext('2d');
-    const downloadLink = document.getElementById('downloadLink');
-
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-
-        const nickname = document.getElementById('nickname').value.trim();
-        const donation = document.getElementById('donation').value.trim();
-
-        const targetImageUrl = sigImages[donation];
-
-        if (!targetImageUrl) {
-            alert(`입력하신 [${donation}개]에 해당하는 등록된 시그 이미지가 없습니다!`);
-            return;
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const backgroundImage = new Image();
-        backgroundImage.crossOrigin = 'anonymous';
-        
-        // CORS 우회를 위해 무료 프록시 서버 주소를 앞에 붙입니다.
-        backgroundImage.src = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetImageUrl);
-
-        backgroundImage.onload = () => {
-            ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
-            drawText(nickname, donation);
-            activateDownload();
+        const sigImages = {
+            "508": "https://sig.cnine.kr/signature/20260328/c4825df37c964a549914c62a06c71791.gif",
+            "606": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/6062.gif",
+            "1010": "https://sig.cnine.kr/signature/20260412/668dbcd4446d49448776eea866dd25a1.gif",
+            "1070": "https://sig.cnine.kr/signature/20260328/c5e61476097d4af79086a072cf277059.png",
+            "1470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1470_jh.png",
+            "1916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1916_jh.png",
+            "2870": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/2870_jh.png",
+            "3916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/3916_jh.png",
+            "5770": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/5770_jh.png",
+            "9916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/9916_jh.png",
+            "12470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/12470_jh.png",
+            "28270": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/28270_jh.png",
+            "30916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/30916_jh.png",
+            "99916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/99916_jh.png"
         };
 
-        backgroundImage.onerror = () => {
-            alert('이미지를 불러오는 중 문제가 발생했습니다. 프록시 서버 연결을 확인해주세요.');
-        };
-    });
+        const form = document.getElementById('imageForm');
+        const resultImage = document.getElementById('resultImage');
+        const placeholderText = document.getElementById('placeholderText');
+        const overlayTop = document.getElementById('overlayTop');
+        const overlayBottom = document.getElementById('overlayBottom');
+        const overlayNick = document.getElementById('overlayNick');
+        const overlayDonationText = document.getElementById('overlayDonationText');
 
-    function drawText(nickname, donation) {
-        ctx.font = 'bold 13px -apple-system, sans-serif';
-        ctx.fillStyle = '#ff6b6b';
-        ctx.textAlign = 'center';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-        ctx.shadowBlur = 4;
-        ctx.fillText(nickname, canvas.width / 2, canvas.height - 25);
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
 
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(`별풍선 ${donation}개`, canvas.width / 2, canvas.height - 8);
+            const nickname = document.getElementById('nickname').value.trim();
+            const donation = document.getElementById('donation').value.trim();
 
-        ctx.font = 'bold 36px -apple-system, sans-serif';
-        ctx.textAlign = 'center';
-        
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 6;
-        ctx.strokeText(donation, canvas.width / 2, 45);
+            const targetImageUrl = sigImages[donation];
 
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 3;
-        ctx.strokeText(donation, canvas.width / 2, 45);
+            if (!targetImageUrl) {
+                alert(`입력하신 [${donation}개]에 해당하는 등록된 시그 이미지가 없습니다!`);
+                return;
+            }
 
-        ctx.fillStyle = '#ef4444';
-        ctx.fillText(donation, canvas.width / 2, 45);
-        
-        ctx.shadowBlur = 0;
-    }
+            // 이미지 로드 및 화면 출력
+            placeholderText.style.display = 'none';
+            resultImage.style.display = 'block';
+            resultImage.src = targetImageUrl;
 
-    function activateDownload() {
-        downloadLink.style.display = 'inline-block';
-        downloadLink.href = canvas.toDataURL('image/png');
-    }
-</script>
+            // 오버레이 텍스트 설정
+            overlayTop.textContent = donation;
+            overlayTop.style.display = 'block';
+
+            overlayNick.textContent = nickname;
+            overlayDonationText.textContent = `별풍선 ${donation}개`;
+            overlayBottom.style.display = 'block';
+        });
+    </script>
 </body>
 </html>
