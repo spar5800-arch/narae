@@ -214,24 +214,38 @@
 
 
             bgImage.onload = () => {
-                ctx.drawImage(bgImage, 0, 0, resultCanvas.width, resultCanvas.height);
+    ctx.drawImage(bgImage, 0, 0, resultCanvas.width, resultCanvas.height);
 
-                ctx.font = '13px Arial';
-                ctx.fillStyle = '#d65648';
-                ctx.textAlign = 'center';
-                ctx.fillText(nickname, resultCanvas.width / 2, resultCanvas.height - 22);
+    // 숫자에 천 단위 콤마(,) 추가
+    const formattedDonation = Number(donation).toLocaleString();
 
-                ctx.font = 'bold 13px Arial';
-                ctx.fillStyle = 'black';
-                ctx.fillText(`별풍선 ${donation}개`, resultCanvas.width / 2, resultCanvas.height - 7);
+    // 1. 닉네임 (mk)삼김 설정 (맑은 고딕 적용, 약간 어두운 빨간색)
+    ctx.font = 'bold 13px "Malgun Gothic", Dotum, sans-serif';
+    ctx.fillStyle = '#d13f30'; 
+    ctx.textAlign = 'center';
+    ctx.fillText(nickname, resultCanvas.width / 2, resultCanvas.height - 23);
 
-                ctx.font = 'bold 40px Arial';
-                ctx.fillStyle = 'red';
-                ctx.fillText(donation, resultCanvas.width / 2, 40);
+    // 2. 하단 별풍선 개수 텍스트 (콤마 적용)
+    ctx.font = 'bold 13px "Malgun Gothic", Dotum, sans-serif';
+    ctx.fillStyle = 'black';
+    ctx.fillText(`별풍선 ${formattedDonation}개`, resultCanvas.width / 2, resultCanvas.height - 7);
 
-                downloadLink.href = resultCanvas.toDataURL('image/png');
-                downloadLink.style.display = 'inline-block';
-            };
+    // 3. 상단 큰 숫자 (흰 테두리 제거, 검은 테두리만 얇게, 콤마 적용)
+    ctx.font = 'bold 40px Arial, "Malgun Gothic", sans-serif';
+    ctx.textAlign = 'center';
+    
+    // 검은색 테두리
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 4;
+    ctx.strokeText(formattedDonation, resultCanvas.width / 2, 40);
+    
+    // 빨간색 채우기
+    ctx.fillStyle = '#ff0000';
+    ctx.fillText(formattedDonation, resultCanvas.width / 2, 40);
+
+    downloadLink.href = resultCanvas.toDataURL('image/png');
+    downloadLink.style.display = 'inline-block';
+};
 
             bgImage.onerror = () => {
                 alert('이미지를 불러오는 중 문제가 발생했습니다. (CORS 보안 정책 또는 잘못된 주소)');
