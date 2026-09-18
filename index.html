@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>유주현♡ 시그 벽지 생성기</title>
+    <title>별풍선 이미지 생성기</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -49,14 +49,6 @@
             display: flex;
             align-items: center;
             gap: 16px;
-        }
-
-        .brand img {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 2px solid var(--accent2);
-            object-fit: cover;
         }
 
         .header-text h1 {
@@ -137,8 +129,8 @@
 
         .preview-container {
             position: relative;
-            width: 220px;
-            height: 220px;
+            width: 187px;
+            height: 155px;
             border: 1px solid var(--line);
             border-radius: 12px;
             background-color: #ffffff;
@@ -159,11 +151,8 @@
 
     <div class="card">
         <div class="header">
-            <div class="brand">
-                <img src="https://stimg.sooplive.co.kr/LOGO/wn/wnsdus5900/wnsdus5900.jpg" alt="유주현♡">
-            </div>
             <div class="header-text">
-                <h1>유주현<span>♡</span> 시그 벽지 생성기</h1>
+                <h1>별풍선 이미지 생성기</h1>
             </div>
         </div>
 
@@ -174,7 +163,7 @@
             </div>
             <div class="input-group">
                 <label for="donation">별풍선 개수</label>
-                <input type="number" id="donation" name="donation" placeholder="예: 508, 1070, 1470" required autocomplete="off">
+                <input type="number" id="donation" name="donation" placeholder="예: 1000" min="1" step="1" max="9007199254740991" required autocomplete="off">
             </div>
             <button type="submit" class="btn-submit">이미지 생성하기</button>
         </form>
@@ -183,32 +172,15 @@
             <h2 class="result-title">생성된 미리보기</h2>
             <div class="preview-container" id="previewContainer">
                 <span class="placeholder-text" id="placeholderText">정보를 입력해주세요</span>
-                <!-- 캔버스 크기를 220x220 정사각으로 설정하여 이미지와 하단 검은 바가 정확히 들어가도록 함 -->
-                <canvas id="resultCanvas" width="220" height="220" style="display:none; width: 100%; height: 100%; object-fit: contain;"></canvas>
+                <!-- 원본과 동일한 187×155 크기 -->
+                <canvas id="resultCanvas" width="187" height="155" style="display:none; width: 100%; height: 100%; object-fit: contain;"></canvas>
             </div>
             <br>
-            <a id="downloadLink" href="#" download="sig_wallpaper.png" class="mt-4 text-purple-600 font-semibold hover:underline" style="display:none;">이미지 다운로드</a>
+            <a id="downloadLink" href="#" download="star_balloon.png" class="mt-4 text-purple-600 font-semibold hover:underline" style="display:none;">이미지 다운로드</a>
         </div>
     </div>
 
     <script>
-        const sigImages = {
-            "508": "https://sig.cnine.kr/signature/20260328/c4825df37c964a549914c62a06c71791.gif",
-            "606": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/6062.gif",
-            "1010": "https://sig.cnine.kr/signature/20260412/668dbcd4446d49448776eea866dd25a1.gif",
-            "1070": "https://sig.cnine.kr/signature/20260328/c5e61476097d4af79086a072cf277059.png",
-            "1470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1470_jh.png",
-            "1916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/1916_jh.png",
-            "2870": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/2870_jh.png",
-            "3916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/3916_jh.png",
-            "5770": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/5770_jh.png",
-            "9916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/9916_jh.png",
-            "12470": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/12470_jh.png",
-            "28270": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/28270_jh.png",
-            "30916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/30916_jh.png",
-            "99916": "https://uyqziawjqlrqjkwsjnji.supabase.co/storage/v1/object/public/Sig/99916_jh.png"
-        };
-
         const form = document.getElementById('imageForm');
         const resultCanvas = document.getElementById('resultCanvas');
         const ctx = resultCanvas.getContext('2d');
@@ -221,12 +193,17 @@
             const nickname = document.getElementById('nickname').value.trim();
             const donation = document.getElementById('donation').value.trim();
 
+            if (!nickname || !Number.isSafeInteger(Number(donation)) || Number(donation) < 1) {
+                alert('닉네임과 1 이상의 정수 개수를 입력해주세요.');
+                return;
+            }
+
             placeholderText.style.display = 'none';
             downloadLink.style.display = 'none';
             resultCanvas.style.display = 'block';
 
-            // 이미지 주소 설정 (없으면 기본 이미지)
-            const imageUrl = sigImages[donation] || 'https://stimg.sooplive.co.kr/NORMAL_BBS/8/25442978/4573678213100d8bf.png';
+            // 일반 별풍선 이미지만 사용
+            const imageUrl = 'https://stimg.sooplive.co.kr/NORMAL_BBS/8/25442978/4573678213100d8bf.png';
 
             ctx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
 
@@ -234,47 +211,34 @@
             // 주의: 만약 외부 서버에서 CORS를 허용하지 않으면 캔버스에 안 그려질 수 있습니다. 
             // 이 경우 브라우저 보안 때문에 우회가 안 되므로 서버 측 설정이 필요할 수 있습니다.
             bgImage.crossOrigin = 'anonymous'; 
-            bgImage.src = imageUrl;
+
 
             bgImage.onload = () => {
-                // 1. 상단 영역에 이미지 그리기 (높이 175px 공간 확보)
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, 220, 220);
-                
-                // 이미지 비율을 유지하며 상단 영역에 예쁘게 맞춤
-                const hRatio = 220 / bgImage.width;
-                const vRatio = 175 / bgImage.height;
-                const ratio = Math.min(hRatio, vRatio);
-                const centerShiftX = (220 - bgImage.width * ratio) / 2;
-                const centerShiftY = (175 - bgImage.height * ratio) / 2;
-                
-                ctx.drawImage(bgImage, 0, 0, bgImage.width, bgImage.height, centerShiftX, centerShiftY, bgImage.width * ratio, bgImage.height * ratio);
+                ctx.drawImage(bgImage, 0, 0, resultCanvas.width, resultCanvas.height);
 
-                // 2. 하단에 검은색 바 배경 그리기 (높이 45px)
-                ctx.fillStyle = '#111111';
-                ctx.fillRect(0, 175, 220, 45);
-
-                // 3. 하단 텍스트(닉네임, 별풍선) 그리기
-                ctx.font = 'bold 12px sans-serif';
+                ctx.font = '13px Arial';
+                ctx.fillStyle = '#d65648';
                 ctx.textAlign = 'center';
+                ctx.fillText(nickname, resultCanvas.width / 2, resultCanvas.height - 22);
 
-                // 닉네임 (빨간색 계열)
-                ctx.fillStyle = '#ff6b6b';
-                ctx.fillText(nickname, 220 / 2, 195);
+                ctx.font = 'bold 13px Arial';
+                ctx.fillStyle = 'black';
+                ctx.fillText(`별풍선 ${donation}개`, resultCanvas.width / 2, resultCanvas.height - 7);
 
-                // 별풍선 개수 (흰색)
-                ctx.fillStyle = '#ffffff';
-                ctx.fillText(`별풍선 ${donation}개`, 220 / 2, 212);
+                ctx.font = 'bold 40px Arial';
+                ctx.fillStyle = 'red';
+                ctx.fillText(donation, resultCanvas.width / 2, 40);
 
-                // 다운로드 링크 활성화
-                downloadLink.style.display = 'inline-block';
                 downloadLink.href = resultCanvas.toDataURL('image/png');
+                downloadLink.style.display = 'inline-block';
             };
 
             bgImage.onerror = () => {
                 alert('이미지를 불러오는 중 문제가 발생했습니다. (CORS 보안 정책 또는 잘못된 주소)');
             };
+            bgImage.src = imageUrl;
         });
     </script>
 </body>
 </html>
+
